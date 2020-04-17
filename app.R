@@ -5,15 +5,18 @@ library(scales)
 options(shiny.host = '0.0.0.0')
 options(shiny.port = 6204)
 
-ui <- fluidPage(
+infectedDataPath = "~/Documents/COVID-19/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv"
+recoveredDataPath = "~/Documents/COVID-19/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv"
 
+ui <- fluidPage(
+    
     # Application title
     titlePanel("COVID-19 Spread Prediction"),
     textOutput("appInfo1"),
     textOutput("appInfo2"),
     textOutput("appInfo3"),
     tags$hr(),
-
+    
     fluidRow(
         
         column(4,
@@ -55,10 +58,10 @@ ui <- fluidPage(
 
 server <- function(input, output, session) {
     observe({
-    updateSelectInput(session, "Country",
-                      choices = c("All", unique(coronaRaw()$Country.Region)),
-                      selected = input$Country
-                      )
+        updateSelectInput(session, "Country",
+                          choices = c("All", unique(coronaRaw()$Country.Region)),
+                          selected = input$Country
+        )
     })
     
     observe({
@@ -70,14 +73,14 @@ server <- function(input, output, session) {
     
     coronaRaw <- reactive({
         invalidateLater(1000 * 60 * 60 * 3)
-
-        read.csv("~/Documents/COVID-19/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv", stringsAsFactors=FALSE)
+        
+        read.csv(infectedDataPath, stringsAsFactors=FALSE)
     })
     
     coronaRec <- reactive({
         invalidateLater(1000 * 60 * 60 * 3)
-
-        read.csv("~/Documents/COVID-19/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv", stringsAsFactors=FALSE)
+        
+        read.csv(recoveredDataPath, stringsAsFactors=FALSE)
     })
     
     infectedData <- function(){
@@ -135,7 +138,7 @@ server <- function(input, output, session) {
         data = ratePlotData(infected)
         
         selectedData = brushedPoints(data, input$plot_brush, xvar = "Date", yvar = "Rate")
-
+        
         return(selectedData)
     }
     
@@ -180,7 +183,7 @@ server <- function(input, output, session) {
     
     getDownwardsModelPlotData <- function(modelData){
         modelPlot = predict(modelData[[1]],list(Date=modelData[[2]]$Date))
-
+        
         return(data.frame(Date = modelData[[2]]$Date, Rate = modelPlot))
     }
     
@@ -250,7 +253,7 @@ server <- function(input, output, session) {
         rates = infectionRate(infected)
         model = getDownwardsModel()
         predictionData = predictFuture(infectedData, rates, model[[1]][1]$coefficients[2])
-
+        
         plot(predictionData[[1]], main="Infection Prediction")
     })
     
