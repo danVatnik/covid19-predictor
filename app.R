@@ -37,7 +37,7 @@ ui <- fluidPage(
                    verbatimTextOutput("noRecovered"),
                    
                    h5(textOutput("maxDate")),
-                   verbatimTextOutput("info2"),
+                   verbatimTextOutput("maxDateOutput"),
                    
                    h5(textOutput("predictionData")),
                    tableOutput('predictionDataTable'),
@@ -50,6 +50,12 @@ ui <- fluidPage(
         
         column(8,
                plotOutput("distPlot2", brush = "plot_brush"),
+               fluidRow(
+                    column(width = 10, offset = 1,
+                        sliderInput("selectedDateRange", label = h5("Select Date Range for Model Prediction"), min = as.Date("2018-01-01"), 
+                                    max = as.Date("2021-01-01"), value = as.Date(c("2018-01-01", "2021-01-01")), width = "100%")
+                        )
+               ),
                plotOutput("distPlot"),
                plotOutput("distPlot3")
         )
@@ -68,6 +74,12 @@ server <- function(input, output, session) {
         updateSelectInput(session, "Province",
                           choices = c("All", unique(coronaRaw()$Province.State[which(coronaRaw()$Country.Region == input$Country)])),
                           selected = input$Province
+        )
+    })
+    
+    observe({
+        updateSliderInput(session, "selectedDateRange", value = c(min(infectedPlotData(infectedData())$Date), max = max(infectedPlotData(infectedData())$Date)),
+                          min = min(infectedPlotData(infectedData())$Date), max = max(infectedPlotData(infectedData())$Date)
         )
     })
     
@@ -139,6 +151,11 @@ server <- function(input, output, session) {
         
         selectedData = brushedPoints(data, input$plot_brush, xvar = "Date", yvar = "Rate")
         
+        selectedData = data[which(data$Date >= input$selectedDateRange[1] & data$Date <= input$selectedDateRange[2]),]
+        print(data$Date >= input$selectedDateRange[1] & data$Date <= input$selectedDateRange[2])
+        print(input$selectedDateRange[1])
+        print(input$selectedDateRange[2])
+        print(selectedData)
         return(selectedData)
     }
     
@@ -225,7 +242,7 @@ server <- function(input, output, session) {
         
         maxDate = max(prediction$Date[which.max(prediction$Infected)])
         
-        output$info2 = function(){return(maxDate)}
+        output$maxDateOutput = function(){return(maxDate)}
         
         return(list(prediction, maxDate))
     }
@@ -239,7 +256,7 @@ server <- function(input, output, session) {
     output$distPlot2 <- renderPlot({
         infected = infectedData()
         data = ratePlotData(infected)
-        plot(data$Date, data$Rate, main="Rate of Infection - Select data to use in the prediction", xlab = "Date", ylab = "Rate")
+        plot(data$Date, data$Rate, main="Rate of Infection", xlab = "Date", ylab = "Rate")
         model = getDownwardsModel()
         if(!is.null(model)){
             downwardsModelPlotData = getDownwardsModelPlotData(model)
