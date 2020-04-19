@@ -1,12 +1,9 @@
 library(shiny)
-library(gridExtra)
-library(ggplot2)
-library(scales)
 options(shiny.host = '0.0.0.0')
 options(shiny.port = 6204)
 
-infectedDataPath = "~/Documents/COVID-19/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv"
-recoveredDataPath = "~/Documents/COVID-19/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv"
+infectedDataPath = "time_series_covid19_confirmed_global.csv"
+recoveredDataPath = "time_series_covid19_recovered_global.csv"
 
 ui <- fluidPage(
     
@@ -44,7 +41,7 @@ ui <- fluidPage(
                    
                    tags$hr(),
                    h5(textOutput("dataOrigin")),
-                   tags$a(href="https://github.com/CSSEGISandData/COVID-19", "COVID-19 Data"),
+                   tags$a(href="https://github.com/CSSEGISandData/COVID-19", "COVID-19 Data")
                )      
         ),
         
@@ -65,15 +62,13 @@ ui <- fluidPage(
 server <- function(input, output, session) {
     observe({
         updateSelectInput(session, "Country",
-                          choices = c("All", unique(coronaRaw()$Country.Region)),
-                          selected = input$Country
+                          choices = c("All", unique(coronaRaw()$Country.Region))
         )
     })
     
     observe({
         updateSelectInput(session, "Province",
-                          choices = c("All", unique(coronaRaw()$Province.State[which(coronaRaw()$Country.Region == input$Country)])),
-                          selected = input$Province
+                          choices = c("All", unique(coronaRaw()$Province.State[which(coronaRaw()$Country.Region == input$Country)]))
         )
     })
     
@@ -225,7 +220,7 @@ server <- function(input, output, session) {
     }
     
     predictFuture <- function(infected, rates, rateOfChange){
-        if(rateOfChange > 0)
+        if(is.null(rateOfChange) || rateOfChange > 0)
             return(NULL)
         currentRate = rates[length(rates)]
         currentInfected = tail(infected, n=1)
@@ -269,12 +264,20 @@ server <- function(input, output, session) {
         infectedData = infectedPlotData(infected)
         rates = infectionRate(infected)
         model = getDownwardsModel()
-        predictionData = predictFuture(infectedData, rates, model[[1]][1]$coefficients[2])
-        
-        plot(predictionData[[1]], main="Infection Prediction")
+        if(!is.null(model)){
+          predictionData = predictFuture(infectedData, rates, model[[1]][1]$coefficients[2])
+          if(!is.null(predictionData)){
+            plot(predictionData[[1]], main="Infection Prediction")
+          }
+        }
     })
     
-    output$predictionDataTable <- renderTable(getSelectedData())
+    formatDates <- function(data){
+      data$Date = as.character(data$Date)
+      return(data)
+    }
+    
+    output$predictionDataTable <- renderTable(formatDates(getSelectedData()))
     
     output$maxDate <- function(){return("Max Date")}
     
