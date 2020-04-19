@@ -36,9 +36,6 @@ ui <- fluidPage(
                    h5(textOutput("maxDate")),
                    verbatimTextOutput("maxDateOutput"),
                    
-                   h5(textOutput("predictionData")),
-                   tableOutput('predictionDataTable'),
-                   
                    tags$hr(),
                    h5(textOutput("dataOrigin")),
                    tags$a(href="https://github.com/CSSEGISandData/COVID-19", "COVID-19 Data")
@@ -46,15 +43,21 @@ ui <- fluidPage(
         ),
         
         column(8,
-               plotOutput("distPlot2", brush = "plot_brush"),
+               plotOutput("distPlot2"),
                fluidRow(
                     column(width = 10, offset = 1,
-                        sliderInput("selectedDateRange", label = h5("Select Date Range for Model Prediction"), min = as.Date("2018-01-01"), 
+                         sliderInput("selectedDateRange", label = h5("Select Date Range for Model Prediction"), min = as.Date("2018-01-01"), 
                                     max = as.Date("2021-01-01"), value = as.Date(c("2018-01-01", "2021-01-01")), width = "100%")
                         )
                ),
                plotOutput("distPlot"),
-               plotOutput("distPlot3")
+               plotOutput("distPlot3"),
+               fluidRow(
+                   column(width = 4, offset = 4,
+                          h3(textOutput("predictionData")),
+                          tableOutput('predictionDataTable')
+                    )
+               )
         )
     )
 )
@@ -143,8 +146,6 @@ server <- function(input, output, session) {
     getSelectedData <- function(){
         infected = infectedData()
         data = ratePlotData(infected)
-        
-        selectedData = brushedPoints(data, input$plot_brush, xvar = "Date", yvar = "Rate")
         
         selectedData = data[which(data$Date >= input$selectedDateRange[1] & data$Date <= input$selectedDateRange[2]),]
         print(data$Date >= input$selectedDateRange[1] & data$Date <= input$selectedDateRange[2])
