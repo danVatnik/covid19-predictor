@@ -76,7 +76,7 @@ server <- function(input, output, session) {
     })
     
     observe({
-        updateSliderInput(session, "selectedDateRange", value = c(min(infectedPlotData(infectedData())$Date), max = max(infectedPlotData(infectedData())$Date)),
+        updateSliderInput(session, "selectedDateRange", value = c(max(infectedPlotData(infectedData())$Date) - 14, max = max(infectedPlotData(infectedData())$Date)),
                           min = min(infectedPlotData(infectedData())$Date), max = max(infectedPlotData(infectedData())$Date)
         )
     })
@@ -147,11 +147,11 @@ server <- function(input, output, session) {
         infected = infectedData()
         data = ratePlotData(infected)
         
-        selectedData = data[which(data$Date >= input$selectedDateRange[1] & data$Date <= input$selectedDateRange[2]),]
-        print(data$Date >= input$selectedDateRange[1] & data$Date <= input$selectedDateRange[2])
-        print(input$selectedDateRange[1])
-        print(input$selectedDateRange[2])
-        print(selectedData)
+        selectedData = data[which(data$Date >= input$selectedDateRange[1] & 
+                                      data$Date <= input$selectedDateRange[2] &
+                                      !is.nan(data$Rate) &
+                                      !is.infinite(data$Rate)),]
+
         return(selectedData)
     }
     
@@ -280,7 +280,7 @@ server <- function(input, output, session) {
     
     output$predictionDataTable <- renderTable(formatDates(getSelectedData()))
     
-    output$maxDate <- function(){return("Max Date")}
+    output$maxDate <- function(){return("Peak Infected Date")}
     
     output$predictionData <- function(){return("Prediction Data")}
     
@@ -293,10 +293,10 @@ server <- function(input, output, session) {
     }
     
     output$appInfo1 <- function(){
-        return("This app's purpose is to try to determine COVID-19's progression. Ultimatly, it tries to estimate when will it hit it's perak.")
+        return("This app's purpose is to try to determine COVID-19's progression. Ultimatly, it tries to estimate when will it hit it's peak.")
     }
     output$appInfo2 <- function(){
-        return("In the second plot, select the data that you want to use in order to estimate the infection rates progression.")
+        return("Select the data that you want to use in order to estimate the infection rates progression.")
     }
     output$appInfo3 <- function(){
         return("A linear regression is applied to the selected rates in order to estimate the progression. NB: Other regressions might be better.")
