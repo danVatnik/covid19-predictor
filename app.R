@@ -293,10 +293,10 @@ server <- function(input, output, session) {
     }
     
     output$appInfo1 <- function(){
-        return("This app's purpose is to try to determine COVID-19's progression. Ultimatly, it tries to estimate when will it hit it's peak.")
+        return("This app's purpose is to try to determine COVID-19's progression. Ultimately, it tries to estimate when will it hit it's peak.")
     }
     output$appInfo2 <- function(){
-        return("Select the data that you want to use in order to estimate the infection rates progression.")
+        return("Select the data that you want to use in order to estimate the infection rate's progression.")
     }
     output$appInfo3 <- function(){
         return("A linear regression is applied to the selected rates in order to estimate the progression. NB: Other regressions might be better.")
